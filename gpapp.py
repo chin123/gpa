@@ -8,6 +8,7 @@ import hashlib
 import urllib
 import html
 import math
+import csv
 
 def errmsg(msg):
     return render_template("index.html", err=msg, semesters=semesters, prevcourse=request.args["course"], filters=FILTERS)
@@ -202,13 +203,21 @@ WEIGHT = [4.00, 4.00, 3.67, 3.33, 3, 2.67, 2.33, 2, 1.67, 1.33, 1, 0.67, 0]
 SEM_FULL_FORM = {'sp': "Spring", 'fa': "Fall", 'su': "Summer", 'wi': "Winter"}
 grades = get_grades(df)
 semesters = get_semesters(df)
-print("calculating average GPAs...")
-calc_avg_gpa(df)
-print("done calculating average GPAs")
+with open('overall_gpa.csv') as gpa_file:
+    rows = gpa_file.readlines()
+    for i in csv.reader([rows[0]], quotechar='"', delimiter=',', quoting=csv.QUOTE_ALL, skipinitialspace=True):
+      cn = i
+    mean = rows[1].split(',')
+    std = rows[2].split(',')
+    print(len(cn), len(mean), len(std))
+    for i in range(len(cn)):
+        overall_gpa[cn[i]] = (mean[i], std[i])
 
 @app.route("/", methods=['GET', 'POST'])
 def home():
     semesters = get_semesters(df)
+    for i in range(len(FILTERS)):
+        FILTERS[i]['checked'] = False
     if len(request.args) != 0:
         imgpath = "/static/images/plot.png"
         filters_applied = []
@@ -216,6 +225,7 @@ def home():
             if i.isdigit():
                 filters_applied.append(i)
         for i in range(len(filters_applied)):
+            FILTERS[int(filters_applied[i])]['checked'] = True
             filters_applied[i] = FILTERS[int(filters_applied[i])]['text']
 
         prevcourse = request.args["course"]
@@ -239,8 +249,8 @@ def home():
             course_list = []
             for i in list(course_stats["CourseFull"].unique()):
                 avg, std = overall_gpa[i]
-                avg = '%.3f'%avg
-                std = '%.3f'%std
+                avg = '%.3f'%float(avg)
+                std = '%.3f'%float(std)
                 link = "?course="+urllib.parse.quote(i, safe='')+"&semester="+urllib.parse.quote(request.args["semester"], safe='')+"&exact=true"
                 course_list.append({'name': i, 'avg': avg, 'std': std, 'link':link})
             course_list = sorted(course_list, key=lambda k: k['avg'], reverse=True)
