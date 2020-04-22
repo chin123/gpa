@@ -21,6 +21,8 @@ weight = [4.00, 4.00, 3.67, 3.33, 3, 2.67, 2.33, 2, 1.67, 1.33, 1, 0.67, 0]
 semesters = []
 sem_full_form = {'sp': "Spring", 'fa': "Fall", 'su': "Summer", 'wi': "Winter"}
 
+cross = pd.read_csv("cross.txt", names=['cross', 'orig'])
+
 for i in df["YearTerm"].unique():
     fullname = sem_full_form[i.split('-')[1]] + " " + i.split('-')[0]
     semesters.append({'value': i, 'text': fullname})
@@ -45,6 +47,11 @@ def home():
 
         num = int(num)
         subj = subj.upper()
+
+        orig = cross[cross["cross"] == subj + " " + str(num)]
+        if len(orig) != 0:
+            subj = orig["orig"].iloc[0].split()[0]
+            num = int(orig["orig"].iloc[0].split()[1])
 
         course_stats = df[df["Subject"] == subj][df["Number"] == num]
         if len(course_stats) == 0:
