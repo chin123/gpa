@@ -25,8 +25,21 @@
 			{% endif %}
 			{% endfor %}
 		</select>
+		<details>
+			<summary>Filters</summary>
+			{% for f in filters %}
+				{% if f.checked == true %}
+				<input type="checkbox" id="{{ f.value }}" name="{{ f.value }}" checked>
+				{% else %}
+				<input type="checkbox" id="{{ f.value }}" name="{{ f.value }}">
+				{% endif %}
+				<label for="{{ f.value }}">{{ f.text }}</label>
+				<br>
+			{% endfor %}
+		</details>
 	</form>
 	<br>
+
 
         {% if course %}
 	<h2> <a href="{{ course_explorer }}">{{ course }}</a>, {{ semester }}</h2>
