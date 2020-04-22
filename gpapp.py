@@ -115,7 +115,7 @@ def get_semester_msg(semester):
         semester_msg = SEM_FULL_FORM[semester.split('-')[1]] + " " + semester.split('-')[0]
     return semester_msg
 
-def mark_selected_semesters(semester):
+def mark_selected_semesters(semesters):
     for i in range(len(semesters)):
         semesters[i]['selected'] = False
         if semesters[i]['value'] == semester:
@@ -158,7 +158,7 @@ def home():
         semester_msg = get_semester_msg(semester)
         pic_hash = gen_plot(course_stats)
         perc = get_perc(course_stats)
-        semesters = mark_selected_semesters(semester)
+        semesters = mark_selected_semesters(semesters)
 
         return render_template("index.html", img=pic_hash + '.png', gpa='%.3f'%avg_gpa_total, perc=perc, prof_stats=prof_stats, semesters=semesters
         , course=request.form["course"].upper(), semester=semester_msg, prevcourse=prevcourse)
