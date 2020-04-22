@@ -1,1 +1,1 @@
-# gpa
+# GPA++: Course GPA Visualizer
