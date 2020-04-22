@@ -10,6 +10,10 @@ import html
 import math
 import csv
 
+def is_subseq(x, y):
+    it = iter(y)
+    return all(any(c == ch for c in it) for ch in x)
+
 def errmsg(msg):
     return render_template("index.html", err=msg, semesters=semesters, prevcourse=request.args["course"], filters=FILTERS)
 
@@ -162,8 +166,10 @@ def apply_filters(filters_applied, course_list):
     valid_courses = list(gen_ed_df["CourseFull"])
     for i in course_list:
         # deal with web scraping BS
-        if html.escape(i) in valid_courses:
-            ret.append(i)
+        for j in valid_courses:
+            if is_subseq(html.escape(i), j):
+                ret.append(i)
+                break
 
     return ret
 
