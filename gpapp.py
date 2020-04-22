@@ -162,6 +162,8 @@ def home():
 
         return render_template("index.html", img=pic_hash + '.png', gpa='%.3f'%avg_gpa_total, perc=perc, prof_stats=prof_stats, semesters=semesters
         , course=request.form["course"].upper(), semester=semester_msg, prevcourse=prevcourse)
+    for i in range(len(semesters)):
+        semesters[i]['selected'] = False
     return render_template("index.html", semesters=semesters)
     
 if __name__ == "__main__":
