@@ -7,3 +7,4 @@
 * Per semester and per instructor GPA stats
 * Lightweight and fast
 ![Screenshot](screenshot.png)
+![Screenshot](screenshot2.png)
