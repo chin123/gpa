@@ -110,8 +110,13 @@ def home():
         for (g,n) in zip(grades, course_stats[grades].sum()):
             perc.append({'g': g, 'p': '%.3f'%((n/num_students_total)*100)})
 
-        return render_template("index.html", img=fname, gpa='%.3f'%avg_gpa_total, perc=perc, prof_stats=prof_stats, semesters=semesters
-        , course=request.form["course"].upper(), semester=sem_full_form[semester.split('-')[1]] + " " + semester.split('-')[0])
+        if semester == "All":
+            semester_msg = "All Semesters"
+        else:
+            semester_msg = sem_full_form[semester.split('-')[1]] + " " + semester.split('-')[0]
+
+        return render_template("index.html", img=pic_hash + '.png', gpa='%.3f'%avg_gpa_total, perc=perc, prof_stats=prof_stats, semesters=semesters
+        , course=request.form["course"].upper(), semester=semester_msg)
     return render_template("index.html", semesters=semesters)
     
 if __name__ == "__main__":

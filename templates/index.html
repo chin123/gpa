@@ -3,7 +3,7 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<link rel="stylesheet" href="/static/css/style.css">
+	<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 	<title>GPA++</title>
 </head>
 <body>
@@ -37,7 +37,7 @@
 	{% endfor %}
 	</table>
 
-        <img src="{{ img }}"/>
+        <img src="{{ url_for('static', filename='images') }}/{{ img }}"/>
 	</div>
 	<br>
 	<br>
