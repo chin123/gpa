@@ -25,11 +25,11 @@ cross = pd.read_csv("cross.txt", names=['cross', 'orig'])
 
 for i in df["YearTerm"].unique():
     fullname = sem_full_form[i.split('-')[1]] + " " + i.split('-')[0]
-    semesters.append({'value': i, 'text': fullname})
+    semesters.append({'value': i, 'text': fullname, 'selected': False})
 
 
 def errmsg(msg):
-    return render_template("index.html", err=msg)
+    return render_template("index.html", err=msg, semesters=semesters, prevcourse=request.form["course"])
 
 @app.route("/", methods=['GET', 'POST'])
 def home():
@@ -38,6 +38,7 @@ def home():
 
         # Obtain data from form and validate
         course = request.form["course"].split()
+        prevcourse = request.form["course"]
         if len(course) != 2:
             return errmsg("Invalid format. Must be of the form SUBJECT COURSENUM")
 
@@ -60,6 +61,11 @@ def home():
         semester = request.form["semester"]
         if semester != "All":
             course_stats = course_stats[course_stats["YearTerm"] == semester]
+
+        for i in range(len(semesters)):
+            semesters[i]['selected'] = False
+            if semesters[i]['value'] == semester:
+                semesters[i]['selected'] = True
 
         if len(course_stats) == 0:
           return errmsg("Course not found in specified semester")
@@ -123,7 +129,7 @@ def home():
             semester_msg = sem_full_form[semester.split('-')[1]] + " " + semester.split('-')[0]
 
         return render_template("index.html", img=pic_hash + '.png', gpa='%.3f'%avg_gpa_total, perc=perc, prof_stats=prof_stats, semesters=semesters
-        , course=request.form["course"].upper(), semester=semester_msg)
+        , course=request.form["course"].upper(), semester=semester_msg, prevcourse=prevcourse)
     return render_template("index.html", semesters=semesters)
     
 if __name__ == "__main__":

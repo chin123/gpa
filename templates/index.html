@@ -9,12 +9,20 @@
 <body>
 	<form action="" method="post">
 		<label for="course">Course name:</label>
+		{% if prevcourse %}
+		<input name="course" id="course" type="text" value="{{ prevcourse }}">
+		{% else %}
 		<input name="course" id="course" type="text">
+		{% endif %}
 		<input type="submit" value="Submit">
 		<select id="semester" name="semester">
 			<option value="All">All Semesters</option>
 			{% for s in semesters %}
+			{% if s.selected == true %}
+			<option value="{{ s.value }}" selected>{{ s.text }}</option>
+			{% else %}
 			<option value="{{ s.value }}">{{ s.text }}</option>
+			{% endif %}
 			{% endfor %}
 		</select>
 	</form>

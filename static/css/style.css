@@ -28,6 +28,11 @@ table, th, td {
 	border: 1px solid black;
 }
 
+td, th {
+        padding-left: 0.5em;
+        padding-right: 0.5em;
+}
+
 .overall {
 	float: left;
 }
