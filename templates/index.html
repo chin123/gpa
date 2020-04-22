@@ -70,7 +70,24 @@
 	</center>
 	</div>
         {% else %}
+        {% if course_list %}
+	<table>
+	<tr>
+	<th>Course</th>
+	<th>Average GPA</th>
+	<th>Standard Deviation of GPA</th>
+	</tr>
+	{% for course in course_list %}
+	<tr>
+	<td> <a href="{{ course.link }}">{{ course.name }}</a>
+	<td> {{ course.avg }}
+	<td> {{ course.std }}
+	</tr>
+	{% endfor %}
+	</table>
+        {% else %}
         <p> Enter a course name to begin! </p>
+        {% endif %}
         {% endif %}
 
         {% if err %}

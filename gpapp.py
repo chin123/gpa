@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import base64
 import io
 import hashlib
-import time
+import urllib
 import numpy as np
 
 def errmsg(msg):
@@ -44,14 +44,14 @@ def get_subj_and_num(course):
     return subj, num
 
 def get_avg_gpa(course_stats):
-    num_students_total = course_stats[grades].sum().sum()
-    gpa_sum = 0
     ind = 0
+    gpas = []
     for i in course_stats[grades].sum():
-        gpa_sum += WEIGHT[ind]*i
+        for j in range(i):
+            gpas.append(WEIGHT[ind])
         ind += 1
-    avg_gpa_total = gpa_sum/num_students_total
-    return avg_gpa_total
+    gpas = np.array(gpas)
+    return gpas.mean(), gpas.std()
 
 def get_prof_stats(course_stats):
     # Calculate avg gpa per instructor
@@ -117,6 +117,9 @@ def mark_selected_semesters(semester):
 
     return semesters
 
+def search_course(df, regex):
+    shortlist = df[df["CourseFull"].str.contains(regex)]["CourseFull"].unique()
+    return list(shortlist)
 
 
 app = Flask(__name__)
@@ -138,32 +141,47 @@ def home():
         imgpath = "/static/images/plot.png"
 
         # Obtain data from form and validate
-        course = request.args["course"].split()
+        #course = request.args["course"].split()
         prevcourse = request.args["course"]
-        valid, mesg = validate_course(course)
-        if not valid:
-            return errmsg(mesg)
-        subj, num = get_subj_and_num(course)
+        #valid, msg = validate_course(course)
+        #if not valid:
+        #    return errmsg(msg)
+        #subj, num = get_subj_and_num(course)
 
-        course_stats = df[df["Subject"] == subj][df["Number"] == num]
-        if len(course_stats) == 0:
-          return errmsg("No such course found")
+        course_stats = search_course(df, request.args["course"])
+        if "exact" in request.args:
+            course_stats = df[df["CourseFull"] == request.args["course"]]
+        elif len(course_stats) == 0:
+            return errmsg("No matching courses found")
+        elif len(course_stats) != 1: # more than 1 matching course found, generate list
+            course_list = []
+            for i in course_stats:
+                avg, std = get_avg_gpa(df[df["CourseFull"] == i])
+                avg = '%.3f'%avg
+                std = '%.3f'%std
+                link = "?course="+urllib.parse.quote(i, safe='')+"&semester="+urllib.parse.quote(request.args["semester"], safe='')+"&exact=true"
+                course_list.append({'name': i, 'avg': avg, 'std': std, 'link':link})
+            course_list = sorted(course_list, key=lambda k: k['avg'], reverse=True)
+            return render_template("index.html", semesters=semesters, prevcourse=request.args["course"], course_list=course_list)
+        else:
+            course_stats = df[df["CourseFull"] == course_stats[0]]
 
         semester = request.args["semester"]
         if semester != "All":
             course_stats = course_stats[course_stats["YearTerm"] == semester]
 
         if len(course_stats) == 0:
-          return errmsg("Course not found in specified semester")
+          return errmsg("No matching course not found in specified semester")
 
-        avg_gpa_total = get_avg_gpa(course_stats)
+        avg_gpa_total, _ = get_avg_gpa(course_stats)
         prof_stats = get_prof_stats(course_stats)
         semester_msg = get_semester_msg(semester)
         pic_hash = gen_plot(course_stats)
         perc = get_perc(course_stats)
         semesters = mark_selected_semesters(semester)
 
-        course_link = COURSE_EXPLORER_BASE + subj + "/" + str(num)
+        subj, num = course_stats.iloc[0]["CourseFull"].split(":")[0].split()
+        course_link = COURSE_EXPLORER_BASE + subj + "/" + num
 
         return render_template("index.html", img=pic_hash + '.png', gpa='%.3f'%avg_gpa_total, perc=perc, prof_stats=prof_stats, semesters=semesters
         , course=request.args["course"].upper(), semester=semester_msg, prevcourse=prevcourse, course_explorer=course_link)
