@@ -30,6 +30,7 @@
 			{% endif %}
 			{% endfor %}
 		</select>
+		<br>
 		<details>
 			<summary>Filters</summary>
 			{% for f in filters %}
@@ -41,6 +42,23 @@
 				<label for="{{ f.value }}">{{ f.text }}</label>
 				<br>
 			{% endfor %}
+		</details>
+		<br>
+		<details>
+			<summary>Help</summary>
+			<p>
+			Some examples of things you can search:
+			<ul>
+			<li> <code>CS 125</code>
+			<li> <code>CS</code>
+			<li> Crosslisted Courses: <code>ECE 374</code>
+			<li> Regex: <code>ECE 4[0-9][0-9]</code> matches all ECE 400 level courses
+			<li> Regex: <code>[A-Z]+ 4[0-9][0-9]</code> matches all 400 level courses
+			</ul>
+			</p>
+			<p>
+			Selecting filters will restrict shown courses to those which satisfy the chosen criteria. For example, selecting <code>	Social & Beh Sci - Soc Sci </code>, <code>Cultural Studies - US Minority</code>, and <code>Offered in Fall 2020</code> will display all courses which satisfy Social and Behavioral Sciences, US Minority, and is being offered in Fall 2020.
+			</p>
 		</details>
 	</form>
 	<br>
