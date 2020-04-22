@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="/static/css/style.css">
+	<title>GPA++</title>
+</head>
+<body>
+	<form action="" method="post">
+		<label for="course">Course name:</label>
+		<input name="course" id="course" type="text">
+		<input type="submit" value="Submit">
+		<select id="semester" name="semester">
+			<option value="All">All Semesters</option>
+			{% for s in semesters %}
+			<option value="{{ s.value }}">{{ s.text }}</option>
+			{% endfor %}
+		</select>
+	</form>
+	<br>
+
+        {% if course %}
+	<h2> {{ course }}, {{ semester }}</h2>
+	<h2> Average GPA: {{ gpa }} </h2>
+	<div id="overall">
+	<table class="overall">
+	<tr>
+	<th>Grade</th>
+	<th>% of students</th>
+	</tr>
+	{% for s in perc %}
+	<tr>
+	<td> {{ s.g }}
+	<td> {{ s.p }}
+	</tr>
+	{% endfor %}
+	</table>
+
+        <img src="{{ img }}"/>
+	</div>
+	<br>
+	<br>
+	<div id="prof">
+	<center>
+	<table>
+	<tr>
+	<th>Professor</th>
+	<th>Number of Students</th>
+	<th>Average GPA</th>
+	<th>Standard Deviation of GPA</th>
+	</tr>
+	{% for s in prof_stats %}
+	<tr>
+	<td> {{ s.prof }}
+	<td> {{ s.total }}
+	<td> {{ s.avg }}
+	<td> {{ s.std }}
+	</tr>
+	{% endfor %}
+	</table>
+	</center>
+	</div>
+        {% else %}
+        <p> Enter a course name to begin! </p>
+        {% endif %}
+
+        {% if err %}
+        <p class="error"> {{ err }} </p>
+        {% endif %}
+</body>
+</html>

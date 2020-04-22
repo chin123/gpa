@@ -1,0 +1,37 @@
+body {
+	line-height: 1.4;
+	background: #fefefe;
+	max-width: 80%;
+	margin-right: auto;
+	margin-left: auto;
+	font-family: sans;
+}
+
+.navbar a {
+	padding: 0.2em;
+	color: #444;
+}
+
+img {
+	height: auto;
+	max-width: 50%;
+	padding-top: 1em;
+	padding-bottom: 1em;
+	float: right;
+}
+
+.error {
+	color: red;
+}
+
+table, th, td {
+	border: 1px solid black;
+}
+
+.overall {
+	float: left;
+}
+
+#prof {
+	clear: both;
+}
