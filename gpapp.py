@@ -26,6 +26,8 @@ def get_semesters(df):
 
     return semesters
 
+course_explorer_base = "https://courses.illinois.edu/schedule/DEFAULT/DEFAULT/"
+
 def errmsg(msg):
     return render_template("index.html", err=msg, semesters=semesters, prevcourse=request.form["course"])
 
@@ -160,8 +162,10 @@ def home():
         perc = get_perc(course_stats)
         semesters = mark_selected_semesters(semester)
 
+        course_link = course_explorer_base + subj + "/" + str(num)
+
         return render_template("index.html", img=pic_hash + '.png', gpa='%.3f'%avg_gpa_total, perc=perc, prof_stats=prof_stats, semesters=semesters
-        , course=request.form["course"].upper(), semester=semester_msg, prevcourse=prevcourse)
+        , course=request.args["course"].upper(), semester=semester_msg, prevcourse=prevcourse, course_explorer=course_link)
     for i in range(len(semesters)):
         semesters[i]['selected'] = False
     return render_template("index.html", semesters=semesters)
