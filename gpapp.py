@@ -29,7 +29,7 @@ def get_semesters(df):
 course_explorer_base = "https://courses.illinois.edu/schedule/DEFAULT/DEFAULT/"
 
 def errmsg(msg):
-    return render_template("index.html", err=msg, semesters=semesters, prevcourse=request.form["course"])
+    return render_template("index.html", err=msg, semesters=semesters, prevcourse=request.args["course"])
 
 def validate_course(course):
     if len(course) != 2:
@@ -134,21 +134,23 @@ cross = pd.read_csv("cross.txt", names=['cross', 'orig'])
 
 @app.route("/", methods=['GET', 'POST'])
 def home():
-    if request.method=="POST":
+    semesters = get_semesters(df)
+    if len(request.args) != 0:
         imgpath = "/static/images/plot.png"
 
         # Obtain data from form and validate
-        course = request.form["course"].split()
-        prevcourse = request.form["course"]
+        course = request.args["course"].split()
+        prevcourse = request.args["course"]
         valid, mesg = validate_course(course)
-        if not valid: return errmsg(mesg)
+        if not valid:
+            return errmsg(mesg)
         subj, num = get_subj_and_num(course)
 
         course_stats = df[df["Subject"] == subj][df["Number"] == num]
         if len(course_stats) == 0:
           return errmsg("No such course found")
 
-        semester = request.form["semester"]
+        semester = request.args["semester"]
         if semester != "All":
             course_stats = course_stats[course_stats["YearTerm"] == semester]
 
@@ -166,8 +168,7 @@ def home():
 
         return render_template("index.html", img=pic_hash + '.png', gpa='%.3f'%avg_gpa_total, perc=perc, prof_stats=prof_stats, semesters=semesters
         , course=request.args["course"].upper(), semester=semester_msg, prevcourse=prevcourse, course_explorer=course_link)
-    for i in range(len(semesters)):
-        semesters[i]['selected'] = False
+    mark_selected_semesters([])
     return render_template("index.html", semesters=semesters)
     
 if __name__ == "__main__":
