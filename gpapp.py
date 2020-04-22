@@ -7,7 +7,8 @@ import hashlib
 import time
 import numpy as np
 
-app = Flask(__name__)
+def errmsg(msg):
+    return render_template("index.html", err=msg, semesters=semesters, prevcourse=request.args["course"])
 
 def get_grades(df):
     grades = []
@@ -26,11 +27,6 @@ def get_semesters(df):
 
     return semesters
 
-course_explorer_base = "https://courses.illinois.edu/schedule/DEFAULT/DEFAULT/"
-
-def errmsg(msg):
-    return render_template("index.html", err=msg, semesters=semesters, prevcourse=request.args["course"])
-
 def validate_course(course):
     if len(course) != 2:
         return False, "Invalid format. Must be of the form SUBJECT COURSENUM"
@@ -45,10 +41,6 @@ def get_subj_and_num(course):
     subj, num = course[0], course[1]
     num = int(num)
     subj = subj.upper()
-    orig = cross[cross["cross"] == subj + " " + str(num)]
-    if len(orig) != 0:
-        subj = orig["orig"].iloc[0].split()[0]
-        num = int(orig["orig"].iloc[0].split()[1])
     return subj, num
 
 def get_avg_gpa(course_stats):
@@ -125,12 +117,19 @@ def mark_selected_semesters(semester):
 
     return semesters
 
-df = pd.read_csv("uiuc-gpa-dataset.csv")
+
+
+app = Flask(__name__)
+
+COURSE_EXPLORER_BASE = "https://courses.illinois.edu/schedule/DEFAULT/DEFAULT/"
+
+df = pd.read_csv("gpa.csv")
+
+# some preprocessing
 WEIGHT = [4.00, 4.00, 3.67, 3.33, 3, 2.67, 2.33, 2, 1.67, 1.33, 1, 0.67, 0]
 SEM_FULL_FORM = {'sp': "Spring", 'fa': "Fall", 'su': "Summer", 'wi': "Winter"}
 grades = get_grades(df)
 semesters = get_semesters(df)
-cross = pd.read_csv("cross.txt", names=['cross', 'orig'])
 
 @app.route("/", methods=['GET', 'POST'])
 def home():
@@ -164,7 +163,7 @@ def home():
         perc = get_perc(course_stats)
         semesters = mark_selected_semesters(semester)
 
-        course_link = course_explorer_base + subj + "/" + str(num)
+        course_link = COURSE_EXPLORER_BASE + subj + "/" + str(num)
 
         return render_template("index.html", img=pic_hash + '.png', gpa='%.3f'%avg_gpa_total, perc=perc, prof_stats=prof_stats, semesters=semesters
         , course=request.args["course"].upper(), semester=semester_msg, prevcourse=prevcourse, course_explorer=course_link)
