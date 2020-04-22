@@ -1,12 +1,13 @@
 from flask import Flask, render_template, request
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
 import base64
 import io
 import hashlib
 import urllib
 import html
-import numpy as np
+import math
 
 def errmsg(msg):
     return render_template("index.html", err=msg, semesters=semesters, prevcourse=request.args["course"], filters=FILTERS)
@@ -44,15 +45,43 @@ def get_subj_and_num(course):
     subj = subj.upper()
     return subj, num
 
+overall_gpa = dict()
+def calc_avg_gpa(df):
+    for course in list(df["CourseFull"].unique()):
+        ind = 0
+        gpas = []
+        gpasum = 0
+        stdsum = 0
+        numstudents = df[df["CourseFull"] == course][grades].sum().sum()
+        for i in df[df["CourseFull"] == course][grades].sum():
+            gpasum += i*WEIGHT[ind]
+            ind += 1
+        mean = gpasum/numstudents
+        ind = 0
+        for i in df[df["CourseFull"] == course][grades].sum():
+            stdsum += ((WEIGHT[ind] - mean)**2)*i
+            ind += 1
+        stdsum /= numstudents
+        std = math.sqrt(stdsum)
+        overall_gpa[course] = (mean, std)
+
 def get_avg_gpa(course_stats):
     ind = 0
     gpas = []
+    gpasum = 0
+    stdsum = 0
+    numstudents = course_stats[grades].sum().sum()
     for i in course_stats[grades].sum():
-        for j in range(i):
-            gpas.append(WEIGHT[ind])
+        gpasum += i*WEIGHT[ind]
         ind += 1
-    gpas = np.array(gpas)
-    return gpas.mean(), gpas.std()
+    mean = gpasum/numstudents
+    ind = 0
+    for i in course_stats[grades].sum():
+        stdsum += ((WEIGHT[ind] - mean)**2)*i
+        ind += 1
+    stdsum /= numstudents
+    std = math.sqrt(stdsum)
+    return mean, std
 
 def get_prof_stats(course_stats):
     # Calculate avg gpa per instructor
@@ -173,6 +202,9 @@ WEIGHT = [4.00, 4.00, 3.67, 3.33, 3, 2.67, 2.33, 2, 1.67, 1.33, 1, 0.67, 0]
 SEM_FULL_FORM = {'sp': "Spring", 'fa': "Fall", 'su': "Summer", 'wi': "Winter"}
 grades = get_grades(df)
 semesters = get_semesters(df)
+print("calculating average GPAs...")
+calc_avg_gpa(df)
+print("done calculating average GPAs")
 
 @app.route("/", methods=['GET', 'POST'])
 def home():
@@ -206,7 +238,7 @@ def home():
         elif len(uniq_courses) != 1: # more than 1 matching course found, generate list
             course_list = []
             for i in list(course_stats["CourseFull"].unique()):
-                avg, std = get_avg_gpa(df[df["CourseFull"] == i])
+                avg, std = overall_gpa[i]
                 avg = '%.3f'%avg
                 std = '%.3f'%std
                 link = "?course="+urllib.parse.quote(i, safe='')+"&semester="+urllib.parse.quote(request.args["semester"], safe='')+"&exact=true"
