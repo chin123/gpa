@@ -9,6 +9,7 @@ import urllib
 import html
 import math
 import csv
+import re
 
 def is_subseq(x, y):
     it = iter(y)
@@ -153,25 +154,25 @@ def mark_selected_semesters(semester):
     return semesters
 
 def search_course(df, regex):
-    shortlist = df[df["CourseFull"].str.contains(regex)]["CourseFull"].unique()
+    shortlist = df[df["CourseFull"].str.contains(regex, flags=re.IGNORECASE)]["CourseFull"].unique()
     return list(shortlist)
 
 def apply_filters(filters_applied, course_list):
-    if len(filters_applied) == 0:
-        return course_list
     gen_ed_df = gen_ed
     ret = []
     for i in filters_applied:
         gen_ed_df = gen_ed_df[gen_ed_df[i]==1]
     valid_courses = list(gen_ed_df["CourseFull"])
+    gen_ed_name = ""
     for i in course_list:
         # deal with web scraping BS
         for j in valid_courses:
             if is_subseq(html.escape(i), j):
                 ret.append(i)
+                gen_ed_name = j
                 break
 
-    return ret
+    return ret, gen_ed_name
 
 app = Flask(__name__)
 
@@ -238,7 +239,7 @@ def home():
 
         course_list = search_course(df, request.args["course"])
         # apply filters
-        course_stats = apply_filters(filters_applied, course_list)
+        course_stats, gen_ed_name = apply_filters(filters_applied, course_list)
         course_stats = df[df['CourseFull'].isin(course_stats)]
 
         semester = request.args["semester"]
@@ -268,13 +269,20 @@ def home():
         pic_hash = gen_plot(course_stats)
         perc = get_perc(course_stats)
         semesters = mark_selected_semesters(semester)
+        satisfy_info = gen_ed[gen_ed["CourseFull"] == gen_ed_name]
+        filters_satisfied = ""
+        for k in FILTERS:
+            filter_name = k['text']
+            if satisfy_info.iloc[0][filter_name] == 1:
+                filters_satisfied += filter_name + ", "
+        filters_satisfied = filters_satisfied[:-2]
 
         course_full = course_stats.iloc[0]["CourseFull"]
         subj, num = course_full.split(":")[0].split()
         course_link = COURSE_EXPLORER_BASE + subj + "/" + num
 
         return render_template("index.html", img=pic_hash + '.png', gpa='%.3f'%avg_gpa_total, perc=perc, prof_stats=prof_stats, semesters=semesters
-        , course=course_full, semester=semester_msg, prevcourse=prevcourse, course_explorer=course_link, filters=FILTERS)
+        , course=course_full, semester=semester_msg, prevcourse=prevcourse, course_explorer=course_link, filters=FILTERS, satisfies=filters_satisfied)
     mark_selected_semesters([])
     return render_template("index.html", semesters=semesters, filters=FILTERS)
 

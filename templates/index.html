@@ -67,6 +67,9 @@
         {% if course %}
 	<h2> <a href="{{ course_explorer }}">{{ course }}</a>, {{ semester }}</h2>
 	<h2> Average GPA: {{ gpa }} </h2>
+	{% if satisfies != "" %}
+	<h3> Satisfies: {{ satisfies }} </h3>
+	{% endif %}
 	<div id="overall">
 	<table class="overall">
 	<tr>
