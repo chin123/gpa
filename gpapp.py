@@ -1,24 +1,50 @@
-from flask import Flask, render_template, request
-import pandas as pd
+import base64
+import csv
+import hashlib
+import html
+import io
+import math
+import re
+import urllib
+
 import matplotlib.pyplot as plt
 import numpy as np
-import base64
-import io
-import hashlib
-import urllib
-import html
-import math
-import csv
-import re
+import pandas as pd
+from flask import Flask, render_template, request
+
+def calc_avg_gpa(df):
+    for course in list(df["CourseFull"].unique()):
+        ind = 0
+        gpas = []
+        gpasum = 0
+        stdsum = 0
+        numstudents = df[df["CourseFull"] == course][grades].sum().sum()
+        for i in df[df["CourseFull"] == course][grades].sum():
+            gpasum += i*WEIGHT[ind]
+            ind += 1
+        mean = gpasum/numstudents
+        ind = 0
+        for i in df[df["CourseFull"] == course][grades].sum():
+            stdsum += ((WEIGHT[ind] - mean)**2)*i
+            ind += 1
+        stdsum /= numstudents
+        std = math.sqrt(stdsum)
+        overall_gpa[course] = (mean, std)
+
+def get_filters_satisfied(satisfy_info):
+    filters_satisfied = ""
+    for k in FILTERS:
+        filter_name = k['text']
+        if satisfy_info.iloc[0][filter_name] == 1:
+            filters_satisfied += filter_name + ", "
+    filters_satisfied = filters_satisfied[:-2]
+    return filters_satisfied
 
 def errmsg(msg):
     return render_template("index.html", err=msg, semesters=semesters, prevcourse=request.args["course"], filters=FILTERS)
 
 def get_grades(df):
-    grades = []
-    for i in df.columns:
-        if len(i) < 3:
-            grades.append(i)
+    grades = [i for i in df.columns if len(i) < 3]
     #remove the W
     grades = grades[:len(grades)-1]
     return grades
@@ -46,25 +72,6 @@ def get_subj_and_num(course):
     num = int(num)
     subj = subj.upper()
     return subj, num
-
-def calc_avg_gpa(df):
-    for course in list(df["CourseFull"].unique()):
-        ind = 0
-        gpas = []
-        gpasum = 0
-        stdsum = 0
-        numstudents = df[df["CourseFull"] == course][grades].sum().sum()
-        for i in df[df["CourseFull"] == course][grades].sum():
-            gpasum += i*WEIGHT[ind]
-            ind += 1
-        mean = gpasum/numstudents
-        ind = 0
-        for i in df[df["CourseFull"] == course][grades].sum():
-            stdsum += ((WEIGHT[ind] - mean)**2)*i
-            ind += 1
-        stdsum /= numstudents
-        std = math.sqrt(stdsum)
-        overall_gpa[course] = (mean, std)
 
 def get_avg_gpa(course_stats):
     ind = 0
@@ -166,6 +173,25 @@ def apply_filters(filters_applied, course_list):
     print("------end")
     return list(course_df["CourseFull"].unique()), gen_ed_name
 
+def get_filters_applied(request):
+    if len(request.args) != 0:
+        filters_applied = [i for i in request.args if i.isdigit()]
+        for i in range(len(filters_applied)):
+            FILTERS[int(filters_applied[i])]['checked'] = True
+            filters_applied[i] = FILTERS[int(filters_applied[i])]['text']
+    return filters_applied
+
+def gen_course_list(course_stats):
+    course_list = []
+    for i in list(course_stats["CourseFull"].unique()):
+        avg, std = overall_gpa[i]
+        avg = '%.3f'%float(avg)
+        std = '%.3f'%float(std)
+        link = "?course="+urllib.parse.quote(i, safe='')+"&semester="+urllib.parse.quote(request.args["semester"], safe='')+"&exact=true"
+        course_list.append({'name': i, 'avg': avg, 'std': std, 'link':link})
+    course_list = sorted(course_list, key=lambda k: k['avg'], reverse=True)
+    return course_list
+
 app = Flask(__name__)
 
 COURSE_EXPLORER_BASE = "https://courses.illinois.edu/schedule/DEFAULT/DEFAULT/"
@@ -217,22 +243,18 @@ with open('overall_gpa.csv') as gpa_file:
 @app.route("/", methods=['GET', 'POST'])
 def home():
     semesters = get_semesters(df)
+    if len(request.args) == 0:
+        mark_selected_semesters([])
+        return render_template("index.html", semesters=semesters, filters=FILTERS)
+
     for i in range(len(FILTERS)):
         FILTERS[i]['checked'] = False
-    if len(request.args) != 0:
-        imgpath = "/static/images/plot.png"
-        filters_applied = []
-        for i in request.args:
-            if i.isdigit():
-                filters_applied.append(i)
-        for i in range(len(filters_applied)):
-            FILTERS[int(filters_applied[i])]['checked'] = True
-            filters_applied[i] = FILTERS[int(filters_applied[i])]['text']
 
         prevcourse = request.args["course"]
 
         course_list = search_course(df, request.args["course"])
         # apply filters
+        filters_applied = get_filters_applied(request)
         course_stats, gen_ed_name = apply_filters(filters_applied, course_list)
         course_stats = df[df['CourseFull'].isin(course_stats)]
 
@@ -247,14 +269,7 @@ def home():
         elif len(uniq_courses) == 0:
             return errmsg("No matching courses found")
         elif len(uniq_courses) != 1: # more than 1 matching course found, generate list
-            course_list = []
-            for i in list(course_stats["CourseFull"].unique()):
-                avg, std = overall_gpa[i]
-                avg = '%.3f'%float(avg)
-                std = '%.3f'%float(std)
-                link = "?course="+urllib.parse.quote(i, safe='')+"&semester="+urllib.parse.quote(request.args["semester"], safe='')+"&exact=true"
-                course_list.append({'name': i, 'avg': avg, 'std': std, 'link':link})
-            course_list = sorted(course_list, key=lambda k: k['avg'], reverse=True)
+            course_list = gen_course_list(course_stats)
             return render_template("index.html", semesters=semesters, prevcourse=request.args["course"], course_list=course_list, filters=FILTERS)
 
         avg_gpa_total, _ = get_avg_gpa(course_stats)
@@ -264,12 +279,7 @@ def home():
         perc = get_perc(course_stats)
         semesters = mark_selected_semesters(semester)
         satisfy_info = gen_ed[gen_ed["CourseFull"] == gen_ed_name]
-        filters_satisfied = ""
-        for k in FILTERS:
-            filter_name = k['text']
-            if satisfy_info.iloc[0][filter_name] == 1:
-                filters_satisfied += filter_name + ", "
-        filters_satisfied = filters_satisfied[:-2]
+        filters_satisfied = get_filters_satisfied(satisfy_info)
 
         course_full = course_stats.iloc[0]["CourseFull"]
         subj, num = course_full.split(":")[0].split()
@@ -277,8 +287,6 @@ def home():
 
         return render_template("index.html", img=pic_hash + '.png', gpa='%.3f'%avg_gpa_total, perc=perc, prof_stats=prof_stats, semesters=semesters
         , course=course_full, semester=semester_msg, prevcourse=prevcourse, course_explorer=course_link, filters=FILTERS, satisfies=filters_satisfied)
-    mark_selected_semesters([])
-    return render_template("index.html", semesters=semesters, filters=FILTERS)
 
 if __name__ == "__main__":
     app.run(debug=True)
