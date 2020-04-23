@@ -11,10 +11,6 @@ import math
 import csv
 import re
 
-def is_subseq(x, y):
-    it = iter(y)
-    return all(any(c == ch for c in it) for ch in x)
-
 def errmsg(msg):
     return render_template("index.html", err=msg, semesters=semesters, prevcourse=request.args["course"], filters=FILTERS)
 
@@ -51,7 +47,6 @@ def get_subj_and_num(course):
     subj = subj.upper()
     return subj, num
 
-overall_gpa = dict()
 def calc_avg_gpa(df):
     for course in list(df["CourseFull"].unique()):
         ind = 0
@@ -154,29 +149,27 @@ def mark_selected_semesters(semester):
     return semesters
 
 def search_course(df, regex):
-    shortlist = df[df["CourseFull"].str.contains(regex, flags=re.IGNORECASE)]["CourseFull"].unique()
+    shortlist = df[df["CourseFull"].str.match(regex, flags=re.IGNORECASE)]["CourseFull"].unique()
     return list(shortlist)
 
 def apply_filters(filters_applied, course_list):
+    print("------start")
     gen_ed_df = gen_ed
     ret = []
     for i in filters_applied:
         gen_ed_df = gen_ed_df[gen_ed_df[i]==1]
     valid_courses = list(gen_ed_df["CourseFull"])
+    course_df = df[df["CourseFull"].isin(course_list)][df["gen_ed_trans"].isin(valid_courses)]
     gen_ed_name = ""
-    for i in course_list:
-        # deal with web scraping BS
-        for j in valid_courses:
-            if is_subseq(html.escape(i), j):
-                ret.append(i)
-                gen_ed_name = j
-                break
-
-    return ret, gen_ed_name
+    if len(course_df) > 0:
+        gen_ed_name = course_df.iloc[0]['gen_ed_trans']
+    print("------end")
+    return list(course_df["CourseFull"].unique()), gen_ed_name
 
 app = Flask(__name__)
 
 COURSE_EXPLORER_BASE = "https://courses.illinois.edu/schedule/DEFAULT/DEFAULT/"
+overall_gpa = dict()
 
 FILTERS = [{'checked': False, 'value': '0', 'text': 'Social & Beh Sci - Soc Sci'},
  {'checked': False, 'value': '1', 'text': 'Cultural Studies - US Minority'},

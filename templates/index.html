@@ -10,6 +10,7 @@
 	<div class="navbar">
 		<a href="/gpa">Home</a>
 		<a href="https://github.com/chin123/gpa">Source Code</a>
+		<a href="mailto:cmahesh2@illinois.edu">Contact</a>
 	</div>
 	<br>
 	<form action="" method="get">
@@ -49,15 +50,17 @@
 			<p>
 			Some examples of things you can search:
 			<ul>
-			<li> <code>CS 125</code>
-			<li> <code>CS</code>
-			<li> Crosslisted Courses: <code>ECE 374</code>
+			<li> <code>CS 125</code> will go straight to CS 125 as it is the only valid match
+			<li> <code>CS</code> will list all courses starting with <code>CS</code>
+			<li> <code>CS 498</code> will display all the sub sections of CS 498.
+			<li> Crosslisted Courses: <code>ECE 374</code> will work even though its cross-listed with CS 374.
 			<li> Regex: <code>ECE 4[0-9][0-9]</code> matches all ECE 400 level courses
 			<li> Regex: <code>[A-Z]+ 4[0-9][0-9]</code> matches all 400 level courses
+			<li> Regex: <code>(?!CS)([A-Z]+ 4[0-9][0-9])</code> matches all 400 levels not in CS. (could be used to find advanced electives, for example)
 			</ul>
 			</p>
 			<p>
-			Selecting filters will restrict shown courses to those which satisfy the chosen criteria. For example, selecting <code>	Social & Beh Sci - Soc Sci </code>, <code>Cultural Studies - US Minority</code>, and <code>Offered in Fall 2020</code> will display all courses which satisfy Social and Behavioral Sciences, US Minority, and is being offered in Fall 2020.
+			Selecting filters will restrict shown courses to those which satisfy the chosen criteria. For example, selecting <code>	Social & Beh Sci - Soc Sci </code>, <code>Cultural Studies - US Minority</code>, and <code>Offered in Fall 2020</code> will display all courses which satisfy Social and Behavioral Sciences, US Minority, and is being offered in Fall 2020. This will be further filtered by whatever is entered in the search bar, allowing for all kinds of searches!
 			</p>
 		</details>
 	</form>
