@@ -15,7 +15,6 @@ body {
 
 img {
 	height: auto;
-	max-width: 100%;
 	padding-top: 1em;
 	padding-bottom: 1em;
 	padding-left: 1em;
@@ -55,6 +54,12 @@ pop_graph:hover img {
 	display: block;   
 }
 
-main_graph img {
-	float: left;
+#curve {
+	float: right;
+	max-width: 50%;
+}
+
+.prof_curve {
+	width: auto;
+	height: 100%;
 }

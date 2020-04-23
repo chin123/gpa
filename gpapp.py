@@ -6,6 +6,7 @@ import io
 import math
 import re2
 import urllib
+import matplotlib
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -151,7 +152,6 @@ def gen_plot(course_stats, plot_type):
     centre_circle = plt.Circle((0,0), 0.9,fc='white')
     fig = plt.gcf()
     fig.gca().add_artist(centre_circle)
-    plt.tight_layout()
     plt.savefig(pic_IObytes, format="png")
     pic_IObytes.seek(0)
     base64_img = base64.b64encode(pic_IObytes.read())
@@ -258,6 +258,8 @@ def gen_course_list(course_stats):
 app = Flask(__name__)
 cors = CORS(app)
 app.config["CORS_HEADERS"] = "Content-Type"
+
+matplotlib.use('Agg')
 
 COURSE_EXPLORER_BASE = "https://courses.illinois.edu/schedule/DEFAULT/DEFAULT/"
 overall_gpa = dict()
