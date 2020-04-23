@@ -151,7 +151,8 @@ def gen_plot(course_stats, plot_type):
     pic_IObytes = io.BytesIO()
     centre_circle = plt.Circle((0,0), 0.9,fc='white')
     fig = plt.gcf()
-    fig.gca().add_artist(centre_circle)
+    if plot_type["kind"] == "pie":
+      fig.gca().add_artist(centre_circle)
     plt.savefig(pic_IObytes, format="png")
     pic_IObytes.seek(0)
     base64_img = base64.b64encode(pic_IObytes.read())
