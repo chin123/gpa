@@ -101,7 +101,7 @@
 	</tr>
 	{% for s in prof_stats %}
 	<tr>
-	<td> <pop_graph> <span class=blueText> {{ s.prof }} </span> <img src="{{ url_for('static', filename='images') }}/{{ s.plot }}"> </pop_graph>
+	<td> <details> <summary class=blueText> {{ s.prof }} </summary> <img src="{{ url_for('static', filename='images') }}/{{ s.plot }}"> </details>
 	<td> {{ s.total }}
 	<td> {{ s.avg }}
 	<td> {{ s.std }}
