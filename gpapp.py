@@ -250,43 +250,43 @@ def home():
     for i in range(len(FILTERS)):
         FILTERS[i]['checked'] = False
 
-        prevcourse = request.args["course"]
+    prevcourse = request.args["course"]
 
-        course_list = search_course(df, request.args["course"])
-        # apply filters
-        filters_applied = get_filters_applied(request)
-        course_stats, gen_ed_name = apply_filters(filters_applied, course_list)
-        course_stats = df[df['CourseFull'].isin(course_stats)]
+    course_list = search_course(df, request.args["course"])
+    # apply filters
+    filters_applied = get_filters_applied(request)
+    course_stats, gen_ed_name = apply_filters(filters_applied, course_list)
+    course_stats = df[df['CourseFull'].isin(course_stats)]
 
-        semester = request.args["semester"]
-        if semester != "All":
-            course_stats = course_stats[course_stats["YearTerm"] == semester]
+    semester = request.args["semester"]
+    if semester != "All":
+        course_stats = course_stats[course_stats["YearTerm"] == semester]
 
-        uniq_courses = list(course_stats["CourseFull"].unique())
+    uniq_courses = list(course_stats["CourseFull"].unique())
 
-        if "exact" in request.args:
-            course_stats = course_stats[course_stats["CourseFull"] == request.args["course"]]
-        elif len(uniq_courses) == 0:
-            return errmsg("No matching courses found")
-        elif len(uniq_courses) != 1: # more than 1 matching course found, generate list
-            course_list = gen_course_list(course_stats)
-            return render_template("index.html", semesters=semesters, prevcourse=request.args["course"], course_list=course_list, filters=FILTERS)
+    if "exact" in request.args:
+        course_stats = course_stats[course_stats["CourseFull"] == request.args["course"]]
+    elif len(uniq_courses) == 0:
+        return errmsg("No matching courses found")
+    elif len(uniq_courses) != 1: # more than 1 matching course found, generate list
+        course_list = gen_course_list(course_stats)
+        return render_template("index.html", semesters=semesters, prevcourse=request.args["course"], course_list=course_list, filters=FILTERS)
 
-        avg_gpa_total, _ = get_avg_gpa(course_stats)
-        prof_stats = get_prof_stats(course_stats)
-        semester_msg = get_semester_msg(semester)
-        pic_hash = gen_plot(course_stats)
-        perc = get_perc(course_stats)
-        semesters = mark_selected_semesters(semester)
-        satisfy_info = gen_ed[gen_ed["CourseFull"] == gen_ed_name]
-        filters_satisfied = get_filters_satisfied(satisfy_info)
+    avg_gpa_total, _ = get_avg_gpa(course_stats)
+    prof_stats = get_prof_stats(course_stats)
+    semester_msg = get_semester_msg(semester)
+    pic_hash = gen_plot(course_stats)
+    perc = get_perc(course_stats)
+    semesters = mark_selected_semesters(semester)
+    satisfy_info = gen_ed[gen_ed["CourseFull"] == gen_ed_name]
+    filters_satisfied = get_filters_satisfied(satisfy_info)
 
-        course_full = course_stats.iloc[0]["CourseFull"]
-        subj, num = course_full.split(":")[0].split()
-        course_link = COURSE_EXPLORER_BASE + subj + "/" + num
+    course_full = course_stats.iloc[0]["CourseFull"]
+    subj, num = course_full.split(":")[0].split()
+    course_link = COURSE_EXPLORER_BASE + subj + "/" + num
 
-        return render_template("index.html", img=pic_hash + '.png', gpa='%.3f'%avg_gpa_total, perc=perc, prof_stats=prof_stats, semesters=semesters
-        , course=course_full, semester=semester_msg, prevcourse=prevcourse, course_explorer=course_link, filters=FILTERS, satisfies=filters_satisfied)
+    return render_template("index.html", img=pic_hash + '.png', gpa='%.3f'%avg_gpa_total, perc=perc, prof_stats=prof_stats, semesters=semesters
+    , course=course_full, semester=semester_msg, prevcourse=prevcourse, course_explorer=course_link, filters=FILTERS, satisfies=filters_satisfied)
 
 if __name__ == "__main__":
     app.run(debug=True)
