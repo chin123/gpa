@@ -203,6 +203,7 @@ WEIGHT = [4.00, 4.00, 3.67, 3.33, 3, 2.67, 2.33, 2, 1.67, 1.33, 1, 0.67, 0]
 SEM_FULL_FORM = {'sp': "Spring", 'fa': "Fall", 'su': "Summer", 'wi': "Winter"}
 grades = get_grades(df)
 semesters = get_semesters(df)
+
 with open('overall_gpa.csv') as gpa_file:
     rows = gpa_file.readlines()
     for i in csv.reader([rows[0]], quotechar='"', delimiter=',', quoting=csv.QUOTE_ALL, skipinitialspace=True):
