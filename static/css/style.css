@@ -55,6 +55,7 @@ pop_graph:hover img {
 }
 
 #curve {
+	max-width: 100%;
 	float: right;
 }
 
