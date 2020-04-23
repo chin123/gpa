@@ -127,7 +127,8 @@ def get_prof_stats(course_stats):
         gpas = np.array(gpas)
         avg_gpa = gpas.mean()
         std_gpa = gpas.std()
-        plot, _ = gen_plot(row, {"kind": "pie", "figsize": (3,3)})
+        max_num_students = max(list(row[grades]))
+        plot, _ = gen_plot(row[grades], {"kind": "pie", "figsize": (3,3), "radius":1.3})
         prof_stats.append(
             {
                 "prof": row.name,
@@ -147,6 +148,10 @@ def gen_plot(course_stats, plot_type):
     ax.set_ylabel('')
 
     pic_IObytes = io.BytesIO()
+    centre_circle = plt.Circle((0,0), 0.9,fc='white')
+    fig = plt.gcf()
+    fig.gca().add_artist(centre_circle)
+    plt.tight_layout()
     plt.savefig(pic_IObytes, format="png")
     pic_IObytes.seek(0)
     base64_img = base64.b64encode(pic_IObytes.read())
