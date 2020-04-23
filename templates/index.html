@@ -86,7 +86,7 @@
 	{% endfor %}
 	</table>
 
-        <img src="{{ url_for('static', filename='images') }}/{{ img }}"/>
+	<main_graph> <img src="{{ url_for('static', filename='images') }}/{{ img }}"/> </main_graph>
 	</div>
 	<br>
 	<br>
@@ -101,7 +101,7 @@
 	</tr>
 	{% for s in prof_stats %}
 	<tr>
-	<td> {{ s.prof }}
+	<td> <pop_graph> {{ s.prof }} <img src="{{ url_for('static', filename='images') }}/{{ s.plot }}"> </pop_graph>
 	<td> {{ s.total }}
 	<td> {{ s.avg }}
 	<td> {{ s.std }}

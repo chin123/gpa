@@ -127,21 +127,24 @@ def get_prof_stats(course_stats):
         gpas = np.array(gpas)
         avg_gpa = gpas.mean()
         std_gpa = gpas.std()
+        plot, _ = gen_plot(row, {"kind": "pie", "figsize": (3,3)})
         prof_stats.append(
             {
                 "prof": row.name,
                 "total": int(num_students),
                 "avg": "%.3f" % float(avg_gpa),
                 "std": "%.3f" % float(std_gpa),
+                "plot": plot + ".png",
             }
         )
     prof_stats = sorted(prof_stats, key=lambda k: k["avg"], reverse=True)
     return prof_stats
 
 
-def gen_plot(course_stats):
+def gen_plot(course_stats, plot_type):
     # Create grade distribution plot
-    course_stats[grades].sum().plot(kind="bar")
+    ax=course_stats.plot(**plot_type)
+    ax.set_ylabel('')
 
     pic_IObytes = io.BytesIO()
     plt.savefig(pic_IObytes, format="png")
@@ -364,7 +367,7 @@ def home():
     avg_gpa_total, _ = get_avg_gpa(course_stats)
     prof_stats = get_prof_stats(course_stats)
     semester_msg = get_semester_msg(semester)
-    pic_hash, base64_img = gen_plot(course_stats)
+    pic_hash, base64_img = gen_plot(course_stats[grades].sum(), {"kind": "bar", "figsize": (7,5)})
     perc = get_perc(course_stats)
     semesters = mark_selected_semesters(semester)
     satisfy_info = gen_ed[gen_ed["CourseFull"] == gen_ed_name]

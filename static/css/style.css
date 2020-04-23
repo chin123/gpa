@@ -5,6 +5,7 @@ body {
 	margin-right: auto;
 	margin-left: auto;
 	font-family: sans;
+	padding-bottom: 20em;
 }
 
 .navbar a {
@@ -17,7 +18,7 @@ img {
 	max-width: 100%;
 	padding-top: 1em;
 	padding-bottom: 1em;
-	float: right;
+	padding-left: 1em;
 }
 
 .error {
@@ -54,3 +55,6 @@ pop_graph:hover img {
 	display: block;   
 }
 
+main_graph img {
+	float: left;
+}
