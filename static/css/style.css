@@ -51,12 +51,11 @@ pop_graph img {
 }
 
 pop_graph:hover img {
-	display: block;   
+	display: block;
 }
 
 #curve {
 	float: right;
-	max-width: 50%;
 }
 
 .prof_curve {
