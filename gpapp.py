@@ -158,10 +158,13 @@ def mark_selected_semesters(semester):
 def search_course(df, regex):
     regex = "(?i)" + regex.upper()
     all_courses = list(df["CourseFull"].unique())
-    r = re2.compile(regex)
+    try:
+      r = re2.compile(regex)
+    except re2.error:
+      return [], False
     shortlist = list(filter(r.match, all_courses))
     print(shortlist)
-    return shortlist
+    return shortlist, True
 
 def apply_filters(filters_applied, course_list):
     print("------start")
@@ -256,7 +259,9 @@ def home():
 
     prevcourse = request.args["course"]
 
-    course_list = search_course(df, request.args["course"])
+    course_list, success = search_course(df, request.args["course"])
+    if not success:
+        return errmsg("Invalid regular expression")
     # apply filters
     filters_applied = get_filters_applied(request)
     course_stats, gen_ed_name = apply_filters(filters_applied, course_list)
