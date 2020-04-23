@@ -10,7 +10,8 @@ import urllib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
+from flask_cors import CORS, cross_origin
 
 def calc_avg_gpa(df):
     for course in list(df["CourseFull"].unique()):
@@ -40,7 +41,9 @@ def get_filters_satisfied(satisfy_info):
     filters_satisfied = filters_satisfied[:-2]
     return filters_satisfied
 
-def errmsg(msg):
+def errmsg(msg, ret_json):
+    if ret_json:
+        return jsonify({'err':msg})
     return render_template("index.html", err=msg, semesters=semesters, prevcourse=request.args["course"], filters=FILTERS)
 
 def get_grades(df):
@@ -107,7 +110,7 @@ def get_prof_stats(course_stats):
         gpas = np.array(gpas)
         avg_gpa = gpas.mean()
         std_gpa = gpas.std()
-        prof_stats.append({'prof': row.name, 'total': num_students, 'avg': '%.3f'%avg_gpa, 'std': '%.3f'%std_gpa})
+        prof_stats.append({'prof': row.name, 'total': int(num_students), 'avg': '%.3f'%float(avg_gpa), 'std': '%.3f'%float(std_gpa)})
     prof_stats = sorted(prof_stats, key=lambda k: k['avg'], reverse=True)
     return prof_stats
 
@@ -117,6 +120,8 @@ def gen_plot(course_stats):
 
     pic_IObytes = io.BytesIO()
     plt.savefig(pic_IObytes, format='png')
+    pic_IObytes.seek(0)
+    base64_img = base64.b64encode(pic_IObytes.read())
     pic_IObytes.seek(0)
 
     BLOCKSIZE = 65536
@@ -130,7 +135,7 @@ def gen_plot(course_stats):
 
     plt.savefig(fname)
     plt.clf()
-    return pic_hash
+    return pic_hash, base64_img
 
 def get_perc(course_stats):
     # Calculate % of students in each grade
@@ -200,6 +205,8 @@ def gen_course_list(course_stats):
     return course_list
 
 app = Flask(__name__)
+cors = CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
 
 COURSE_EXPLORER_BASE = "https://courses.illinois.edu/schedule/DEFAULT/DEFAULT/"
 overall_gpa = dict()
@@ -248,8 +255,15 @@ with open('overall_gpa.csv') as gpa_file:
         overall_gpa[cn[i]] = (mean[i], std[i])
 
 @app.route("/", methods=['GET', 'POST'])
+@cross_origin()
 def home():
     semesters = get_semesters(df)
+
+    if "json" in request.args:
+        ret_json = True
+    else:
+        ret_json = False
+
     if len(request.args) == 0:
         mark_selected_semesters([])
         return render_template("index.html", semesters=semesters, filters=FILTERS)
@@ -261,7 +275,7 @@ def home():
 
     course_list, success = search_course(df, request.args["course"])
     if not success:
-        return errmsg("Invalid regular expression")
+        return errmsg("Invalid regular expression", ret_json)
     # apply filters
     filters_applied = get_filters_applied(request)
     course_stats, gen_ed_name = apply_filters(filters_applied, course_list)
@@ -276,15 +290,17 @@ def home():
     if "exact" in request.args:
         course_stats = course_stats[course_stats["CourseFull"] == request.args["course"]]
     elif len(uniq_courses) == 0:
-        return errmsg("No matching courses found")
+        return errmsg("No matching courses found", ret_json)
     elif len(uniq_courses) != 1: # more than 1 matching course found, generate list
         course_list = gen_course_list(course_stats)
+        if ret_json:
+            return jsonify({'course_list': course_list})
         return render_template("index.html", semesters=semesters, prevcourse=request.args["course"], course_list=course_list, filters=FILTERS)
 
     avg_gpa_total, _ = get_avg_gpa(course_stats)
     prof_stats = get_prof_stats(course_stats)
     semester_msg = get_semester_msg(semester)
-    pic_hash = gen_plot(course_stats)
+    pic_hash, base64_img = gen_plot(course_stats)
     perc = get_perc(course_stats)
     semesters = mark_selected_semesters(semester)
     satisfy_info = gen_ed[gen_ed["CourseFull"] == gen_ed_name]
@@ -293,6 +309,9 @@ def home():
     course_full = course_stats.iloc[0]["CourseFull"]
     subj, num = course_full.split(":")[0].split()
     course_link = COURSE_EXPLORER_BASE + subj + "/" + num
+
+    if ret_json:
+        return jsonify({'gpa': '%.3f'%avg_gpa_total, 'perc':perc, 'course': course_full, 'course_explorer': course_link, 'satisfies': filters_satisfied, 'img':base64_img.decode("utf-8"), 'prof_stats': prof_stats})
 
     return render_template("index.html", img=pic_hash + '.png', gpa='%.3f'%avg_gpa_total, perc=perc, prof_stats=prof_stats, semesters=semesters
     , course=course_full, semester=semester_msg, prevcourse=prevcourse, course_explorer=course_link, filters=FILTERS, satisfies=filters_satisfied)
