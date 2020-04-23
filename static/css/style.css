@@ -40,3 +40,17 @@ td, th {
 #prof {
 	clear: both;
 }
+
+.blueText
+{
+	color: blue;
+}
+
+pop_graph img {
+	display: none;
+}
+
+pop_graph:hover img {
+	display: block;   
+}
+
