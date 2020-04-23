@@ -4,7 +4,7 @@ import hashlib
 import html
 import io
 import math
-import re
+import re2
 import urllib
 
 import matplotlib.pyplot as plt
@@ -156,8 +156,12 @@ def mark_selected_semesters(semester):
     return semesters
 
 def search_course(df, regex):
-    shortlist = df[df["CourseFull"].str.match(regex, flags=re.IGNORECASE)]["CourseFull"].unique()
-    return list(shortlist)
+    regex = "(?i)" + regex.upper()
+    all_courses = list(df["CourseFull"].unique())
+    r = re2.compile(regex)
+    shortlist = list(filter(r.match, all_courses))
+    print(shortlist)
+    return shortlist
 
 def apply_filters(filters_applied, course_list):
     print("------start")
