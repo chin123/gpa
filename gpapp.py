@@ -7,13 +7,13 @@ import math
 import re2
 import urllib
 import matplotlib
+import copy
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS, cross_origin
-
 
 def get_filters_satisfied(satisfy_info):
     filters_satisfied = ""
@@ -25,15 +25,15 @@ def get_filters_satisfied(satisfy_info):
     return filters_satisfied
 
 
-def errmsg(msg, ret_json):
+def errmsg(msg, ret_json, prevcourse, FILTERS_copy, semesters_copy):
     if ret_json:
         return jsonify({"err": msg})
     return render_template(
         "index.html",
         err=msg,
-        semesters=semesters,
+        semesters=semesters_copy,
         prevcourse=request.args["course"],
-        filters=FILTERS,
+        filters=FILTERS_copy,
     )
 
 
@@ -172,12 +172,13 @@ def get_semester_msg(semester):
 
 
 def mark_selected_semesters(semester):
+    semesters_copy = copy.deepcopy(semesters)
     for i in range(len(semesters)):
-        semesters[i]["selected"] = False
-        if semesters[i]["value"] == semester:
-            semesters[i]["selected"] = True
+        semesters_copy[i]["selected"] = False
+        if semesters_copy[i]["value"] == semester:
+            semesters_copy[i]["selected"] = True
 
-    return semesters
+    return semesters_copy
 
 
 def search_course(df, regex):
@@ -193,28 +194,24 @@ def search_course(df, regex):
 
 
 def apply_filters(filters_applied, course_list):
-    print("------start")
     gen_ed_df = gen_ed
     ret = []
     for i in filters_applied:
         gen_ed_df = gen_ed_df[gen_ed_df[i] == 1]
     valid_courses = list(gen_ed_df["Course"])
-    print("-------------")
     course_df = df[(df["CourseFull"]).isin(course_list)]
     course_df = course_df[(course_df["Subject"] + " " + course_df["Number"].astype('str')).isin(valid_courses)]
 
-    print("------end")
     return list(course_df["CourseFull"].unique())
 
-
 def get_filters_applied(request):
+    FILTERS_copy = copy.deepcopy(FILTERS)
     if len(request.args) != 0:
         filters_applied = [i for i in request.args if i.isdigit()]
         for i in range(len(filters_applied)):
-            FILTERS[int(filters_applied[i])]["checked"] = True
+            FILTERS_copy[int(filters_applied[i])]["checked"] = True
             filters_applied[i] = FILTERS[int(filters_applied[i])]["text"]
-    return filters_applied
-
+    return filters_applied, FILTERS_copy
 
 def gen_course_list(course_stats):
     course_list = []
@@ -238,7 +235,6 @@ def gen_course_list(course_stats):
     course_list = sorted(course_list, key=lambda k: k["avg"], reverse=True)
     return course_list
 
-
 app = Flask(__name__)
 cors = CORS(app)
 app.config["CORS_HEADERS"] = "Content-Type"
@@ -248,12 +244,12 @@ matplotlib.use('Agg')
 COURSE_EXPLORER_BASE = "https://courses.illinois.edu/schedule/DEFAULT/DEFAULT/"
 overall_gpa = dict()
 
-filter_categories = {'ACP': 'Advanced Composition', 'NW': 'Non-Western Cultures', 'WCC': 'Western/Comparative Cultures', 'US': 'US Minority Cultures', 'HP':'Historical & Philosophical Perspectives', 'LA': 'Literature & the Arts', 'LS': 'Life Sciences', 'PS': 'Physical Sciences', 'QR1': 'Quantitative Reasoning 1', 'QR2': 'Quantitative Reasoning 2', 'BS': 'Behavioral Sciences', 'SS': 'Social Sciences'}
+FILTER_CATEGORIES = {'ACP': 'Advanced Composition', 'NW': 'Non-Western Cultures', 'WCC': 'Western/Comparative Cultures', 'US': 'US Minority Cultures', 'HP':'Historical & Philosophical Perspectives', 'LA': 'Literature & the Arts', 'LS': 'Life Sciences', 'PS': 'Physical Sciences', 'QR1': 'Quantitative Reasoning 1', 'QR2': 'Quantitative Reasoning 2', 'BS': 'Behavioral Sciences', 'SS': 'Social Sciences'}
 
 FILTERS = []
 temp_counter = 0
-for i in filter_categories:
-    FILTERS.append({"checked": False, "value": str(temp_counter), "text": filter_categories[i]})
+for i in FILTER_CATEGORIES:
+    FILTERS.append({"checked": False, "value": str(temp_counter), "text": FILTER_CATEGORIES[i]})
     temp_counter += 1
 
 df = pd.read_csv("gpa.csv")
@@ -277,49 +273,59 @@ def home():
         ret_json = False
 
     if len(request.args) == 0:
-        mark_selected_semesters([])
         return render_template(
             "index.html", semesters=semesters, filters=FILTERS
         )
 
-    for i in range(len(FILTERS)):
-        FILTERS[i]["checked"] = False
-
+    # prevcourse is the course just searched for
     prevcourse = urllib.parse.unquote(request.args["course"])
-    print("prevcourse: " + prevcourse + "end")
+
+    # get applied filters
+    filters_applied, FILTERS_copy = get_filters_applied(request)
+
+    # get applied semester
+    semester = request.args["semester"]
+    semesters_copy = mark_selected_semesters(semester)
 
     course_list, success = search_course(df, prevcourse)
     if not success:
-        return errmsg("Invalid regular expression", ret_json)
-    # apply filters
-    filters_applied = get_filters_applied(request)
+        return errmsg("Invalid regular expression",
+            ret_json,
+            prevcourse,
+            FILTERS_copy,
+            semesters_copy)
+
     course_stats = apply_filters(filters_applied, course_list)
     course_stats = df[df["CourseFull"].isin(course_stats)]
 
-    semester = request.args["semester"]
     if semester != "All":
         course_stats = course_stats[course_stats["YearTerm"] == semester]
 
     uniq_courses = list(course_stats["CourseFull"].unique())
+
+
 
     if "exact" in request.args:
         course_stats = df[
             df["CourseFull"] == prevcourse
         ]
     elif len(uniq_courses) == 0:
-        return errmsg("No matching courses found", ret_json)
-    elif (
-        len(uniq_courses) != 1
-    ):  # more than 1 matching course found, generate list
+        return errmsg("No matching courses found",
+            ret_json,
+            prevcourse,
+            FILTERS_copy,
+            semesters_copy)
+    elif len(uniq_courses) != 1:
+        # more than 1 matching course found, generate list
         course_list = gen_course_list(course_stats)
         if ret_json:
             return jsonify({"course_list": course_list})
         return render_template(
             "index.html",
-            semesters=semesters,
+            semesters=semesters_copy,
             prevcourse=request.args["course"],
             course_list=course_list,
-            filters=FILTERS,
+            filters=FILTERS_copy,
         )
 
     avg_gpa_total, _ = get_avg_gpa(course_stats)
@@ -327,7 +333,6 @@ def home():
     semester_msg = get_semester_msg(semester)
     pic_hash, base64_img = gen_plot(course_stats[grades].sum(), {"kind": "bar", "figsize": (7,5)})
     perc = get_perc(course_stats)
-    semesters = mark_selected_semesters(semester)
 
     course_full = course_stats.iloc[0]["CourseFull"]
     subj, num = course_full.split(":")[0].split()
@@ -355,12 +360,12 @@ def home():
         gpa="%.3f" % avg_gpa_total,
         perc=perc,
         prof_stats=prof_stats,
-        semesters=semesters,
+        semesters=semesters_copy,
         course=course_full,
         semester=semester_msg,
         prevcourse=prevcourse,
         course_explorer=course_link,
-        filters=FILTERS,
+        filters=FILTERS_copy,
         satisfies=filters_satisfied,
     )
 
