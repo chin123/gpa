@@ -182,7 +182,11 @@ def mark_selected_semesters(semester):
 
 
 def search_course(df, regex):
-    regex = "(?i)" + regex.upper()
+    # explanation:
+    # (?i): case insensitive
+    # (.+/|): if the course is cross listed, the main course(s)
+    #         could be listed first with a trailing /
+    regex = "(?i)(.+/|)" + regex.upper()
     all_courses = list(df["CourseFull"].unique())
     try:
         r = re2.compile(regex)
@@ -333,7 +337,8 @@ def home():
     perc = get_perc(course_stats)
 
     course_full = course_stats.iloc[0]["CourseFull"]
-    subj, num = course_full.split(":")[0].split()
+    subj = course_stats.iloc[0]["Subject"]
+    num = str(course_stats.iloc[0]["Number"])
     satisfy_info = gen_ed[gen_ed["Course"] == (subj + " " + num)]
     course_link = COURSE_EXPLORER_BASE + subj + "/" + num
 
