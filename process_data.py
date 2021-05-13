@@ -31,8 +31,16 @@ df = pd.read_csv("uiuc-gpa-dataset.csv")
 WEIGHT = [4.00, 4.00, 3.67, 3.33, 3, 2.67, 2.33, 2, 1.67, 1.33, 1, 0.67, 0]
 grades = get_grades(df)
 
+cross_mapping = dict()
+for i in set(df["Subject"] + " " + df["Number"].astype('str')):
+    cross_mapping[i] = i
+cross = pd.read_csv("cross.txt", names=['cross', 'orig'])
+for ind, row in cross.iterrows():
+    if row['orig'] in cross_mapping:
+        cross_mapping[row['orig']] += "/" + row['cross']
+
 # generate full course name for regex search
-df["CourseFull"] = df["Subject"] + " " + df["Number"].astype('str') + ": " + df["Course Title"]
+df["CourseFull"] = (df["Subject"] + " " + df["Number"].astype('str')).map(cross_mapping) + ": " + df["Course Title"]
 
 # list of all courses in GPA++
 all_courses = set(list(df["Subject"] + " " + df["Number"].astype('str')))
