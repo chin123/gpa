@@ -241,7 +241,7 @@ app.config["CORS_HEADERS"] = "Content-Type"
 
 matplotlib.use('Agg')
 
-COURSE_EXPLORER_BASE = "https://courses.illinois.edu/schedule/DEFAULT/DEFAULT/"
+COURSE_EXPLORER_BASE = "https://courses.illinois.edu/schedule/terms/"
 overall_gpa = dict()
 
 FILTER_CATEGORIES = {'ACP': 'Advanced Composition', 'NW': 'Non-Western Cultures', 'WCC': 'Western/Comparative Cultures', 'US': 'US Minority Cultures', 'HP':'Historical & Philosophical Perspectives', 'LA': 'Literature & the Arts', 'LS': 'Life Sciences', 'PS': 'Physical Sciences', 'QR1': 'Quantitative Reasoning 1', 'QR2': 'Quantitative Reasoning 2', 'BS': 'Behavioral Sciences', 'SS': 'Social Sciences'}
