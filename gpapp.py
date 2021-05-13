@@ -15,26 +15,6 @@ from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS, cross_origin
 
 
-def calc_avg_gpa(df):
-    for course in list(df["CourseFull"].unique()):
-        ind = 0
-        gpas = []
-        gpasum = 0
-        stdsum = 0
-        numstudents = df[df["CourseFull"] == course][grades].sum().sum()
-        for i in df[df["CourseFull"] == course][grades].sum():
-            gpasum += i * WEIGHT[ind]
-            ind += 1
-        mean = gpasum / numstudents
-        ind = 0
-        for i in df[df["CourseFull"] == course][grades].sum():
-            stdsum += ((WEIGHT[ind] - mean) ** 2) * i
-            ind += 1
-        stdsum /= numstudents
-        std = math.sqrt(stdsum)
-        overall_gpa[course] = (mean, std)
-
-
 def get_filters_satisfied(satisfy_info):
     filters_satisfied = ""
     for k in FILTERS:
@@ -218,15 +198,13 @@ def apply_filters(filters_applied, course_list):
     ret = []
     for i in filters_applied:
         gen_ed_df = gen_ed_df[gen_ed_df[i] == 1]
-    valid_courses = list(gen_ed_df["CourseFull"])
-    course_df = df[df["CourseFull"].isin(course_list)][
-        df["gen_ed_trans"].isin(valid_courses)
-    ]
-    gen_ed_name = ""
-    if len(course_df) > 0:
-        gen_ed_name = course_df.iloc[0]["gen_ed_trans"]
+    valid_courses = list(gen_ed_df["Course"])
+    print("-------------")
+    course_df = df[(df["CourseFull"]).isin(course_list)]
+    course_df = course_df[(course_df["Subject"] + " " + course_df["Number"].astype('str')).isin(valid_courses)]
+
     print("------end")
-    return list(course_df["CourseFull"].unique()), gen_ed_name
+    return list(course_df["CourseFull"].unique())
 
 
 def get_filters_applied(request):
@@ -240,18 +218,23 @@ def get_filters_applied(request):
 
 def gen_course_list(course_stats):
     course_list = []
-    for i in list(course_stats["CourseFull"].unique()):
-        avg, std = overall_gpa[i]
+    cur_courses = course_stats["CourseFull"].unique()
+    gpa_data = overall_gpa[overall_gpa["CourseFull"].isin(cur_courses)]
+    for i,r in gpa_data.iterrows():
+        avg = gpa_data.loc[i]["mean"]
+        std = gpa_data.loc[i]["std"]
+        name = gpa_data.loc[i]["CourseFull"]
         avg = "%.3f" % float(avg)
         std = "%.3f" % float(std)
         link = (
             "?course="
-            + urllib.parse.quote(i, safe="")
+            + urllib.parse.quote(name, safe="")
             + "&semester="
             + urllib.parse.quote(request.args["semester"], safe="")
             + "&exact=true"
         )
-        course_list.append({"name": i, "avg": avg, "std": std, "link": link})
+        print("link: " + link)
+        course_list.append({"name": name, "avg": avg, "std": std, "link": link})
     course_list = sorted(course_list, key=lambda k: k["avg"], reverse=True)
     return course_list
 
@@ -265,57 +248,23 @@ matplotlib.use('Agg')
 COURSE_EXPLORER_BASE = "https://courses.illinois.edu/schedule/DEFAULT/DEFAULT/"
 overall_gpa = dict()
 
-FILTERS = [
-    {"checked": False, "value": "0", "text": "Social & Beh Sci - Soc Sci"},
-    {"checked": False, "value": "1", "text": "Cultural Studies - US Minority"},
-    {"checked": False, "value": "2", "text": "Humanities - Hist & Phil"},
-    {"checked": False, "value": "3", "text": "Humanities - Lit & Arts"},
-    {"checked": False, "value": "4", "text": "Cultural Studies - Non-West"},
-    {"checked": False, "value": "5", "text": "Advanced Composition"},
-    {"checked": False, "value": "6", "text": "Quantitative Reasoning I"},
-    {"checked": False, "value": "7", "text": "Nat Sci & Tech - Life Sciences"},
-    {"checked": False, "value": "8", "text": "Cultural Studies - Western"},
-    {"checked": False, "value": "9", "text": "James Scholars"},
-    {"checked": False, "value": "10", "text": "Social & Beh Sci - Beh Sci"},
-    {"checked": False, "value": "11", "text": "Camp Honors/Chanc Schol"},
-    {"checked": False, "value": "12", "text": "Nat Sci & Tech - Phys Sciences"},
-    {"checked": False, "value": "13", "text": "Quantitative Reasoning II"},
-    {"checked": False, "value": "14", "text": "Composition I"},
-    {"checked": False, "value": "15", "text": "SL CR/SSP"},
-    {"checked": False, "value": "16", "text": "Grand Challenge-Sustainability"},
-    {"checked": False, "value": "17", "text": "Grand Challenge-Health/Well"},
-    {"checked": False, "value": "18", "text": "Grand Challenge-Inequality"},
-    {"checked": False, "value": "19", "text": "ONL Info Science rate"},
-    {"checked": False, "value": "20", "text": "Ugrad Zero Credit Intern"},
-    {"checked": False, "value": "21", "text": "Teacher Certification"},
-    {"checked": False, "value": "22", "text": "Offered in Fall 2020"},
-]
+filter_categories = {'ACP': 'Advanced Composition', 'NW': 'Non-Western Cultures', 'WCC': 'Western/Comparative Cultures', 'US': 'US Minority Cultures', 'HP':'Historical & Philosophical Perspectives', 'LA': 'Literature & the Arts', 'LS': 'Life Sciences', 'PS': 'Physical Sciences', 'QR1': 'Quantitative Reasoning 1', 'QR2': 'Quantitative Reasoning 2', 'BS': 'Behavioral Sciences', 'SS': 'Social Sciences'}
+
+FILTERS = []
+temp_counter = 0
+for i in filter_categories:
+    FILTERS.append({"checked": False, "value": str(temp_counter), "text": filter_categories[i]})
+    temp_counter += 1
 
 df = pd.read_csv("gpa.csv")
 gen_ed = pd.read_csv("gen_ed.csv")
+overall_gpa = pd.read_csv("overall_gpa.csv")
 
 # some preprocessing
 WEIGHT = [4.00, 4.00, 3.67, 3.33, 3, 2.67, 2.33, 2, 1.67, 1.33, 1, 0.67, 0]
 SEM_FULL_FORM = {"sp": "Spring", "fa": "Fall", "su": "Summer", "wi": "Winter"}
 grades = get_grades(df)
 semesters = get_semesters(df)
-
-with open("overall_gpa.csv") as gpa_file:
-    rows = gpa_file.readlines()
-    for i in csv.reader(
-        [rows[0]],
-        quotechar='"',
-        delimiter=",",
-        quoting=csv.QUOTE_ALL,
-        skipinitialspace=True,
-    ):
-        cn = i
-    mean = rows[1].split(",")
-    std = rows[2].split(",")
-    print(len(cn), len(mean), len(std))
-    for i in range(len(cn)):
-        overall_gpa[cn[i]] = (mean[i], std[i])
-
 
 @app.route("/", methods=["GET", "POST"])
 @cross_origin()
@@ -336,14 +285,15 @@ def home():
     for i in range(len(FILTERS)):
         FILTERS[i]["checked"] = False
 
-    prevcourse = request.args["course"]
+    prevcourse = urllib.parse.unquote(request.args["course"])
+    print("prevcourse: " + prevcourse + "end")
 
-    course_list, success = search_course(df, request.args["course"])
+    course_list, success = search_course(df, prevcourse)
     if not success:
         return errmsg("Invalid regular expression", ret_json)
     # apply filters
     filters_applied = get_filters_applied(request)
-    course_stats, gen_ed_name = apply_filters(filters_applied, course_list)
+    course_stats = apply_filters(filters_applied, course_list)
     course_stats = df[df["CourseFull"].isin(course_stats)]
 
     semester = request.args["semester"]
@@ -353,8 +303,8 @@ def home():
     uniq_courses = list(course_stats["CourseFull"].unique())
 
     if "exact" in request.args:
-        course_stats = course_stats[
-            course_stats["CourseFull"] == request.args["course"]
+        course_stats = df[
+            df["CourseFull"] == prevcourse
         ]
     elif len(uniq_courses) == 0:
         return errmsg("No matching courses found", ret_json)
@@ -378,12 +328,13 @@ def home():
     pic_hash, base64_img = gen_plot(course_stats[grades].sum(), {"kind": "bar", "figsize": (7,5)})
     perc = get_perc(course_stats)
     semesters = mark_selected_semesters(semester)
-    satisfy_info = gen_ed[gen_ed["CourseFull"] == gen_ed_name]
-    filters_satisfied = get_filters_satisfied(satisfy_info)
 
     course_full = course_stats.iloc[0]["CourseFull"]
     subj, num = course_full.split(":")[0].split()
+    satisfy_info = gen_ed[gen_ed["Course"] == (subj + " " + num)]
     course_link = COURSE_EXPLORER_BASE + subj + "/" + num
+
+    filters_satisfied = get_filters_satisfied(satisfy_info)
 
     if ret_json:
         return jsonify(
