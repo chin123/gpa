@@ -58,9 +58,9 @@ for course in toadd:
 
 overall_gpa.to_csv("overall_gpa.csv")
 
-genedreqs = {'ACP':'ACP', 'NW':'CS', 'WCC':'CS', 'US':'CS', 'HP':'HUM', 'LA':'HUM', 'LS':'NAT', 'PS':'NAT', 'QR1':'QR', 'QR2':'QR', 'BS':'SBS', 'SS':'SBS'}
+genedreqs = {'ACP':'ACP', 'NW':'CS', 'WCC':'CS', 'US':'CS', 'HP':'HUM', 'LA':'HUM', 'LS':'NAT', 'PS':'NAT', 'QR1':'QR', 'QR2':'QR', 'BSC':'SBS', 'SS':'SBS'}
 
-trans = {'ACP': 'Advanced Composition', 'NW': 'Non-Western Cultures', 'WCC': 'Western/Comparative Cultures', 'US': 'US Minority Cultures', 'HP':'Historical & Philosophical Perspectives', 'LA': 'Literature & the Arts', 'LS': 'Life Sciences', 'PS': 'Physical Sciences', 'QR1': 'Quantitative Reasoning 1', 'QR2': 'Quantitative Reasoning 2', 'BS': 'Behavioral Sciences', 'SS': 'Social Sciences'}
+trans = {'ACP': 'Advanced Composition', 'NW': 'Non-Western Cultures', 'WCC': 'Western/Comparative Cultures', 'US': 'US Minority Cultures', 'HP':'Historical & Philosophical Perspectives', 'LA': 'Literature & the Arts', 'LS': 'Life Sciences', 'PS': 'Physical Sciences', 'QR1': 'Quantitative Reasoning 1', 'QR2': 'Quantitative Reasoning 2', 'BSC': 'Behavioral Sciences', 'SS': 'Social Sciences'}
 
 # read in gen ed dataset
 df = pd.read_csv("dataset.csv")
