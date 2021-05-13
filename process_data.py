@@ -78,5 +78,5 @@ for i in trans:
             if df.iloc[j][genedreqs[i]] == i:
                 df.loc[j, newcol] = 1
 
-df.to_csv("gened.csv")
+df.to_csv("gen_ed.csv")
 

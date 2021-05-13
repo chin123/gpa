@@ -9,3 +9,10 @@
 * Lightweight and fast
 ![Screenshot](screenshot.png)
 ![Screenshot](screenshot2.png)
+
+## Instructions to self-host
+* Clone this repo: `git clone https://github.com/chin123/gpa`
+* Install [re2](https://github.com/google/re2/)
+* Install other requirements: `cd gpa; pip install -r requirements.txt`
+* Run the program: `python3 gpapp.py`
+* Once a semester: run `process_data.py` with a newly updated `uiuc-course-catalog.csv` (gpa) and `dataset.csv` (geneds) from [Wade's datasets](https://github.com/wadefagen/datasets)
