@@ -189,7 +189,6 @@ def search_course(df, regex):
     except re2.error:
         return [], False
     shortlist = list(filter(r.match, all_courses))
-    print(shortlist)
     return shortlist, True
 
 
@@ -230,7 +229,6 @@ def gen_course_list(course_stats):
             + urllib.parse.quote(request.args["semester"], safe="")
             + "&exact=true"
         )
-        print("link: " + link)
         course_list.append({"name": name, "avg": avg, "std": std, "link": link})
     course_list = sorted(course_list, key=lambda k: k["avg"], reverse=True)
     return course_list
