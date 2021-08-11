@@ -47,7 +47,6 @@ all_courses = set(list(df["Subject"] + " " + df["Number"].astype('str')))
 
 df.to_csv("gpa.csv")
 
-
 # create overall_gpa for faster searching
 overall_gpa = pd.DataFrame(columns=['CourseFull', 'mean', 'std'])
 toadd = set(df["CourseFull"])
