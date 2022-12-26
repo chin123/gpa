@@ -63,7 +63,7 @@ genedreqs = {'ACP':'ACP', 'NW':'CS', 'WCC':'CS', 'US':'CS', 'HP':'HUM', 'LA':'HU
 trans = {'ACP': 'Advanced Composition', 'NW': 'Non-Western Cultures', 'WCC': 'Western/Comparative Cultures', 'US': 'US Minority Cultures', 'HP':'Historical & Philosophical Perspectives', 'LA': 'Literature & the Arts', 'LS': 'Life Sciences', 'PS': 'Physical Sciences', 'QR1': 'Quantitative Reasoning 1', 'QR2': 'Quantitative Reasoning 2', 'BSC': 'Behavioral Sciences', 'SS': 'Social Sciences'}
 
 # read in gen ed dataset
-df = pd.read_csv("dataset.csv")
+df = pd.read_csv("gened-courses.csv")
 
 # add all courses which dont satisfy any gen ed req w/ NA for all reqs
 row_to_copy = df.iloc[-1]

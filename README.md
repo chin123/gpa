@@ -15,4 +15,4 @@
 * Install [re2](https://github.com/google/re2/)
 * Install other requirements: `cd gpa; pip install -r requirements.txt`
 * Run the program: `python3 gpapp.py`
-* Once a semester: run `process_data.py` with a newly updated `uiuc-course-catalog.csv` (gpa) and `dataset.csv` (geneds) from [Wade's datasets](https://github.com/wadefagen/datasets)
+* Once a semester: run `process_data.py` with a newly updated `uiuc-gpa-dataset.csv` (gpa) and `gened-courses.csv` (geneds) from [Wade's datasets](https://github.com/wadefagen/datasets)
