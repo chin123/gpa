@@ -63,10 +63,12 @@ genedreqs = {'ACP':'ACP', 'NW':'CS', 'WCC':'CS', 'US':'CS', 'HP':'HUM', 'LA':'HU
 trans = {'ACP': 'Advanced Composition', 'NW': 'Non-Western Cultures', 'WCC': 'Western/Comparative Cultures', 'US': 'US Minority Cultures', 'HP':'Historical & Philosophical Perspectives', 'LA': 'Literature & the Arts', 'LS': 'Life Sciences', 'PS': 'Physical Sciences', 'QR1': 'Quantitative Reasoning 1', 'QR2': 'Quantitative Reasoning 2', 'BSC': 'Behavioral Sciences', 'SS': 'Social Sciences'}
 
 # read in gen ed dataset
+gpa_df = df
 df = pd.read_csv("gened-courses.csv")
+course_titles = gpa_df.groupby(gpa_df["Subject"] + " " + gpa_df["Number"].astype(str))["Course Title"].first()
 
 # add all courses which dont satisfy any gen ed req w/ NA for all reqs
-row_to_copy = df.iloc[-1]
+row_to_copy = df.iloc[-1].copy()
 for j in genedreqs:
     field = genedreqs[j]
     row_to_copy[field] = "NA"
@@ -75,7 +77,8 @@ geneds = set(list(df["Course"]))
 rem_courses = all_courses - geneds
 for i in rem_courses:
     row_to_copy["Course"] = i
-    df.loc[len(df)] = row_to_copy
+    row_to_copy["Course Title"] = course_titles[i]
+    df.loc[len(df)] = row_to_copy.copy()
 
 # add 0/1 column for each req in genedreqs
 for i in trans:
