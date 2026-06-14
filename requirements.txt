@@ -2,4 +2,5 @@ pandas
 numpy
 flask
 flask_cors
+matplotlib
 git+https://github.com/chin123/pyre2
