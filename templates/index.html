@@ -16,19 +16,19 @@
 	<form action="" method="get">
 		<label for="course">Course name:</label>
 		{% if prevcourse %}
-		<input name="course" id="course" type="text" value="{{ prevcourse }}">
+			<input name="course" id="course" type="text" value="{{ prevcourse }}">
 		{% else %}
-		<input name="course" id="course" type="text">
+			<input name="course" id="course" type="text">
 		{% endif %}
 		<input type="submit" value="Submit">
 		<select id="semester" name="semester">
 			<option value="All">All Semesters</option>
 			{% for s in semesters %}
-			{% if s.selected == true %}
-			<option value="{{ s.value }}" selected>{{ s.text }}</option>
-			{% else %}
-			<option value="{{ s.value }}">{{ s.text }}</option>
-			{% endif %}
+				{% if s.selected == true %}
+					<option value="{{ s.value }}" selected>{{ s.text }}</option>
+				{% else %}
+					<option value="{{ s.value }}">{{ s.text }}</option>
+				{% endif %}
 			{% endfor %}
 		</select>
 		<br>
@@ -36,9 +36,9 @@
 			<summary>Filters</summary>
 			{% for f in filters %}
 				{% if f.checked == true %}
-				<input type="checkbox" id="{{ f.value }}" name="{{ f.value }}" checked>
+					<input type="checkbox" id="{{ f.value }}" name="{{ f.value }}" checked>
 				{% else %}
-				<input type="checkbox" id="{{ f.value }}" name="{{ f.value }}">
+					<input type="checkbox" id="{{ f.value }}" name="{{ f.value }}">
 				{% endif %}
 				<label for="{{ f.value }}">{{ f.text }}</label>
 				<br>
@@ -48,91 +48,90 @@
 		<details>
 			<summary>Help</summary>
 			<p>
-			Some examples of things you can search:
-			<ul>
-			<li> <code>CS 125</code> will go straight to CS 125 as it is the only valid match
-			<li> <code>CS</code> will list all courses starting with <code>CS</code>
-			<li> <code>CS 498</code> will display all the sub sections of CS 498.
-			<li> Crosslisted Courses: <code>ECE 374</code> will work even though its cross-listed with CS 374.
-			<li> Regex: <code>ECE 4</code> matches all ECE 400 level courses
-			<li> Regex: <code>[A-Z]+ 4</code> matches all 400 level courses
-			</ul>
+				Some examples of things you can search:
+				<ul>
+					<li> <code>CS 125</code> will go straight to CS 125 as it is the only valid match
+					<li> <code>CS</code> will list all courses starting with <code>CS</code>
+					<li> <code>CS 498</code> will display all the sub sections of CS 498.
+					<li> Crosslisted Courses: <code>ECE 374</code> will work even though its cross-listed with CS 374.
+					<li> Regex: <code>ECE 4</code> matches all ECE 400 level courses
+					<li> Regex: <code>[A-Z]+ 4</code> matches all 400 level courses
+				</ul>
 			</p>
 			<p>
-			Selecting filters will restrict shown courses to those which satisfy the chosen criteria. For example, selecting <code>	Social & Beh Sci - Soc Sci </code>, <code>Cultural Studies - US Minority</code>, and <code>Offered in Fall 2020</code> will display all courses which satisfy Social and Behavioral Sciences, US Minority, and is being offered in Fall 2020. This will be further filtered by whatever is entered in the search bar, allowing for all kinds of searches!
+				Selecting filters will restrict shown courses to those which satisfy the chosen criteria. For example, selecting <code>	Social & Beh Sci - Soc Sci </code>, <code>Cultural Studies - US Minority</code>, and <code>Offered in Fall 2020</code> will display all courses which satisfy Social and Behavioral Sciences, US Minority, and is being offered in Fall 2020. This will be further filtered by whatever is entered in the search bar, allowing for all kinds of searches!
 			</p>
 		</details>
 	</form>
 	<br>
 
+	{% if course %}
+		<h2> <a href="{{ course_explorer }}">{{ course }}</a>, {{ semester }}</h2>
+		<h2> Average GPA: {{ gpa }} </h2>
+		{% if satisfies != "" %}
+			<h3> Satisfies: {{ satisfies }} </h3>
+		{% endif %}
+		<div id="flex-container">
+			<table class="overall">
+				<tr>
+					<th>Grade</th>
+					<th>% of students</th>
+				</tr>
+				{% for s in perc %}
+					<tr>
+						<td> {{ s.g }}
+						<td> {{ s.p }}
+					</tr>
+				{% endfor %}
+			</table>
 
-        {% if course %}
-	<h2> <a href="{{ course_explorer }}">{{ course }}</a>, {{ semester }}</h2>
-	<h2> Average GPA: {{ gpa }} </h2>
-	{% if satisfies != "" %}
-	<h3> Satisfies: {{ satisfies }} </h3>
+			<img src="{{ url_for('static', filename='images') }}/{{ img }}" id="curve"/>
+		</div>
+		<br>
+		<br>
+		<div id="prof">
+			<center>
+				<table>
+					<tr>
+						<th>Prof.</th>
+						<th>No. of Students</th>
+						<th>Avg GPA</th>
+						<th>Std. Dev. GPA</th>
+					</tr>
+					{% for s in prof_stats %}
+						<tr>
+							<td> <details> <summary class=blueText> {{ s.prof }} </summary> <img class="prof_curve" src="{{ url_for('static', filename='images') }}/{{ s.plot }}"> </details>
+							<td> {{ s.total }}
+							<td> {{ s.avg }}
+							<td> {{ s.std }}
+						</tr>
+					{% endfor %}
+				</table>
+			</center>
+		</div>
+	{% else %}
+		{% if course_list %}
+			<table>
+				<tr>
+					<th>Course</th>
+					<th>Average GPA</th>
+					<th>Standard Deviation of GPA</th>
+				</tr>
+				{% for course in course_list %}
+					<tr>
+						<td> <a href="{{ course.link }}">{{ course.name }}</a>
+						<td> {{ course.avg }}
+						<td> {{ course.std }}
+					</tr>
+				{% endfor %}
+			</table>
+		{% else %}
+			<p> Enter a course name to begin! </p>
+		{% endif %}
 	{% endif %}
-	<div id="flex-container">
-	<table class="overall">
-	<tr>
-	<th>Grade</th>
-	<th>% of students</th>
-	</tr>
-	{% for s in perc %}
-	<tr>
-	<td> {{ s.g }}
-	<td> {{ s.p }}
-	</tr>
-	{% endfor %}
-	</table>
 
-	<img src="{{ url_for('static', filename='images') }}/{{ img }}" id="curve"/>
-	</div>
-	<br>
-	<br>
-	<div id="prof">
-	<center>
-	<table>
-	<tr>
-	<th>Prof.</th>
-	<th>No. of Students</th>
-	<th>Avg GPA</th>
-	<th>Std. Dev. GPA</th>
-	</tr>
-	{% for s in prof_stats %}
-	<tr>
-	<td> <details> <summary class=blueText> {{ s.prof }} </summary> <img class="prof_curve" src="{{ url_for('static', filename='images') }}/{{ s.plot }}"> </details>
-	<td> {{ s.total }}
-	<td> {{ s.avg }}
-	<td> {{ s.std }}
-	</tr>
-	{% endfor %}
-	</table>
-	</center>
-	</div>
-        {% else %}
-        {% if course_list %}
-	<table>
-	<tr>
-	<th>Course</th>
-	<th>Average GPA</th>
-	<th>Standard Deviation of GPA</th>
-	</tr>
-	{% for course in course_list %}
-	<tr>
-	<td> <a href="{{ course.link }}">{{ course.name }}</a>
-	<td> {{ course.avg }}
-	<td> {{ course.std }}
-	</tr>
-	{% endfor %}
-	</table>
-        {% else %}
-        <p> Enter a course name to begin! </p>
-        {% endif %}
-        {% endif %}
-
-        {% if err %}
-        <p class="error"> {{ err }} </p>
-        {% endif %}
+	{% if err %}
+		<p class="error"> {{ err }} </p>
+	{% endif %}
 </body>
 </html>
